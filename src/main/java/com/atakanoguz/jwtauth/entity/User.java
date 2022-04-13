@@ -61,4 +61,10 @@ public class User implements Serializable {
     @ManyToMany(fetch = FetchType.EAGER, cascade = MERGE)
     private List<Role> roles = new ArrayList<>();
 
+    public User(String userName, String fullName, String email, String password) {
+        this.userName = userName;
+        this.fullName = fullName;
+        this.email = email;
+        this.password = password;
+    }
 }
