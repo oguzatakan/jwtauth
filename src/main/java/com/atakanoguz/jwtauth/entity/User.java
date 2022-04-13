@@ -10,7 +10,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Fetch;
 import org.springframework.data.annotation.CreatedDate;
 
-import javax.management.relation.Role;
 import javax.persistence.*;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Size;
@@ -18,6 +17,7 @@ import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import static javax.persistence.CascadeType.*;
 
@@ -58,7 +58,7 @@ public class User implements Serializable {
     @CreationTimestamp
     private LocalDate createdDate;
 
-    @ManyToMany(fetch = FetchType.EAGER, cascade = {MERGE, PERSIST, REFRESH, DETACH})
-    private Collection<Role> roles = new ArrayList<>();
+    @ManyToMany(fetch = FetchType.EAGER, cascade = MERGE)
+    private List<Role> roles = new ArrayList<>();
 
 }
