@@ -42,7 +42,7 @@ public class User implements Serializable {
 
     @NotEmpty
     @Size(max = 64)
-    @Column(name = "user_name", unique = true, nullable = false,length = 64)
+    @Column(name = "full_name", unique = true, nullable = false,length = 64)
     private String fullName;
 
     @NotEmpty
