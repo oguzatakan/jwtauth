@@ -21,7 +21,7 @@ public class Role implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(nullable = false, updatable = false)
-    private short id;
+    private Short id;
 
     @NotEmpty
     @Size(max = 34)
