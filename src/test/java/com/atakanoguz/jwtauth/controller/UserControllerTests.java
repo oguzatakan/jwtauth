@@ -265,6 +265,116 @@ public class UserControllerTests {
 
     }
 
+    @Test
+    @DisplayName("Can/'users/*/:PUT' access without authentication, Expected: UnAuthorized")
+    public void updateUserWithoutAuthentication() throws Exception {
+
+        var mvcResult = mvc.perform(get("/users/user"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.httpStatus").value(UNAUTHORIZED.name()))
+                .andExpect(jsonPath("$.message").value("Invalid username or password!"))
+                .andExpect(jsonPath("$.timestamp").isNotEmpty())
+                .andReturn();
+
+        assertThat(mvcResult.getResponse().getContentType()).isEqualTo("application/json;charset=UTF-8");
+
+    }
+
+    @Test
+    @WithMockUser
+    @DisplayName("Can '/users/:PUT' accessible with 'ROLE_USER', Expected BAD_REQUEST")
+    public void updateUserWithOtherUser() throws Exception {
+
+        User user = userRepository.findByUserName("user");
+
+        var requestBody = new JSONObject();
+
+        requestBody.put("id", user.getId());
+        requestBody.put("userName", faker.name().username());
+        requestBody.put("fullName", faker.name().fullName());
+        requestBody.put("email", faker.bothify("???@test.com"));
+        requestBody.put("password", "1234");
+
+        var request = put("/users")
+                .content(requestBody.toString())
+                .contentType(APPLICATION_JSON);
+
+        var mvcResult = mvc.perform(request)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.httpStatus").value(BAD_REQUEST.name()))
+                .andExpect(jsonPath("$.message").value("You are not authorized to perform this action!"))
+                .andExpect(jsonPath("$.timestamp").isNotEmpty())
+                .andReturn();
+        assertThat(mvcResult.getResponse().getContentType())
+                .isEqualTo("application/json;charset=UTF-8");
+
+    }
+
+    @Test
+    @WithMockUser
+    @DisplayName("Empty values for '/users/*/:PUT', Expected BAD_REQUEST")
+    public void updateUsersEmptyValues() throws Exception {
+
+        var requestBody = new JSONObject();
+
+        requestBody.put("userName", "");
+        requestBody.put("fullName", "");
+        requestBody.put("email", "");
+        requestBody.put("password","");
+
+        var request = put("/users")
+                .content(requestBody.toString())
+                .contentType(APPLICATION_JSON);
+
+        var mvcResult = mvc.perform(request)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Validation Error"))
+                .andExpect(jsonPath("$.httpStatus").value(BAD_REQUEST.name()))
+                .andExpect(jsonPath("$.timestamp").isNotEmpty())
+                .andExpect(jsonPath("$.errors.userName").value("must not be empty"))
+                .andExpect(jsonPath("$.errors.fullName").value("must not be empty"))
+                .andExpect(jsonPath("$.errors.email").value("must not be empty"))
+                .andExpect(jsonPath("$.errors.password").value("must not be empty"))
+                .andReturn();
+
+        assertThat(mvcResult.getResponse().getContentType())
+                .isEqualTo("application/json;charset=UTF-8");
+
+    }
+
+    @Test
+    @WithMockUser(username = "user", authorities = {"USER"})
+    @DisplayName("Overflow values for '/users/*/:PUT', Expected BAD_REQUEST")
+    public void updateUsersOverflowValues() throws Exception {
+
+        var requestBody = new JSONObject();
+
+        requestBody.put("userName", faker.lorem().fixedString(65));
+        requestBody.put("fullName", faker.lorem().fixedString(65));
+        requestBody.put("email", generateFakeString(250) + "@test.com");
+
+
+        var request = put("/users")
+                .content(requestBody.toString())
+                .contentType(APPLICATION_JSON);
+
+
+        var mvcResult = mvc.perform(request)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Validation Error"))
+                .andExpect(jsonPath("$.httpStatus").value(BAD_REQUEST.name()))
+                .andExpect(jsonPath("$.timestamp").isNotEmpty())
+                .andExpect(jsonPath("$.errors.userName").value("size must be between 0 and 64"))
+                .andExpect(jsonPath("$.errors.fullName").value("size must be between 0 and 64"))
+                .andExpect(jsonPath("$.errors.email").exists())
+                .andReturn();
+
+        assertThat(mvcResult.getResponse().getContentType())
+                .isEqualTo("application/json;charset=UTF-8");
+    }
+
+
+
 
 
 
