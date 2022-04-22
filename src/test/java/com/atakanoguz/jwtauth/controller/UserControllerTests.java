@@ -373,6 +373,63 @@ public class UserControllerTests {
                 .isEqualTo("application/json;charset=UTF-8");
     }
 
+    @Test
+    @WithMockUser(username = "admin", authorities = {"ROLE_ADMIN"})
+    @DisplayName("Can '/users/*/:PUT' response error message for not exist user, Expected BAD_REQUEST")
+    public void updateNotExistUser() throws Exception {
+
+        var requestBody = new JSONObject();
+
+        requestBody.put("id", faker.number().numberBetween(1000, 10000));
+        requestBody.put("userName", faker.name().username());
+        requestBody.put("fullName", faker.name().fullName());
+        requestBody.put("email", faker.bothify("???@test.com"));
+        requestBody.put("password", faker.lorem().fixedString(24));
+
+        var request = put("/users")
+                .content(requestBody.toString())
+                .contentType(APPLICATION_JSON);
+
+        var mvcResult = mvc.perform(request)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.httpStatus").value(BAD_REQUEST.name()))
+                .andExpect(jsonPath("$.message")
+                        .value("User is not exist!"))
+                .andExpect(jsonPath("$.timestamp").isNotEmpty())
+                .andReturn();
+
+        assertThat(mvcResult.getResponse().getContentType())
+                .isEqualTo("application/json;charset=UTF-8");
+
+    }
+
+    @Test
+    @WithMockUser(username = "user", authorities = {"ROLE_USER"})
+    @DisplayName("Can '/users/:PUT' UPDATE user, Expected OK")
+    public void updateUser() throws Exception {
+
+        User user = userRepository.findByUserName("user");
+
+
+        var requestBody = new JSONObject();
+
+        requestBody.put("id", user.getId());
+        requestBody.put("userName", faker.name().username());
+        requestBody.put("fullName", faker.name().fullName());
+        requestBody.put("email", faker.bothify("????@test.com"));
+        requestBody.put("password", faker.lorem().fixedString(24));
+
+
+        var request = put("/users")
+                .content(requestBody.toString())
+                .contentType(APPLICATION_JSON);
+
+
+        mvc.perform(request)
+                .andExpect(status().isOk());
+
+    }
+
 
 
 
