@@ -430,18 +430,112 @@ public class UserControllerTests {
 
     }
 
+    @Test
+    @WithMockUser(username = "admin", authorities = {"ROLE_ADMIN"})
+    @DisplayName("Can '/users/*/:PUT' UPDATE user, Expected OK")
+    public void updateUserWithAdmin() throws Exception {
+
+        User user = userRepository.findByUserName("user");
+
+        var requestBody = new JSONObject();
+
+        requestBody.put("id", user.getId());
+        requestBody.put("userName" ,faker.name().username());
+        requestBody.put("fullName", faker.name().fullName());
+        requestBody.put("email", faker.bothify("???@test.com"));
+        requestBody.put("password", faker.lorem().fixedString(24));
+
+        var request = put("/users")
+                .content(requestBody.toString())
+                .contentType(APPLICATION_JSON);
+
+        mvc.perform(request).andExpect(status().isOk());
+
+    }
+
+    //End of PUT request '/users' url tests
+
+    //Begin of DELETE request '/users' url tests
+
+    @Test
+    @DisplayName("Can '/users/*/:DELETE' access without authentication, Expected: UnAuthorized")
+    public void deleteUserWithoutAuthentication() throws Exception {
+
+        var mvcResult = mvc.perform(delete("/users/user"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.httpStatus").value(UNAUTHORIZED.name()))
+                .andExpect(jsonPath("$.message").value("Invalid username or password!"))
+                .andExpect(jsonPath("$.timestamp").isNotEmpty())
+                .andReturn();
+
+        assertThat(mvcResult.getResponse().getContentType()).isEqualTo("application/json;charset=UTF-8");
+    }
+    @Test
+    @WithMockUser
+    @DisplayName("Can '/users/*/:DELETE' accessible with 'ROLE_USER' and other user, Expected BAD_REQUEST")
+    public void deleteUserWithOtherUser() throws Exception {
+
+        var requestBody = new JSONObject();
+
+        var request = delete("/users/user")
+                .content(requestBody.toString())
+                .contentType(APPLICATION_JSON);
+
+        var mvcResult = mvc.perform(request)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.httpStatus").value(BAD_REQUEST.name()))
+                .andExpect(jsonPath("$.message").value("You are not authorized to perform this action!"))
+                .andExpect(jsonPath("$.timestamp").isNotEmpty())
+                .andReturn();
+
+        assertThat(mvcResult.getResponse().getContentType())
+                .isEqualTo("application/json;charset=UTF-8");
+    }
+
+    @Test
+    @WithMockUser(username = "user", authorities = {"ROLE_USER"})
+    @DisplayName("Can '/users//:DELETE' not exist user, Expected: BAD_REQUEST")
+    public void deleteNotExistUser() throws Exception {
+
+        var fakerUserName = faker.name().username();
+
+        var request = delete("/users/" + fakerUserName);
+
+        var mvcResult = mvc.perform(request)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.httpStatus").value(BAD_REQUEST.name()))
+                .andExpect(jsonPath("$.message")
+                        .value("User is not exist!"))
+                .andExpect(jsonPath("$.timestamp").isNotEmpty())
+                .andReturn();
+
+        assertThat(mvcResult.getResponse().getContentType())
+                .isEqualTo("application/json;charset=UTF-8");
+    }
+
+    @Test
+    @WithMockUser(username = "user", authorities = {"ROLE_USER"})
+    @DisplayName("Can '/users//:DELETE' be delete user 'ROLE_USER', Expected: OK")
+    public void deleteUser() throws Exception {
+
+        var request = delete("/users/user");
+
+        mvc.perform(request).andExpect(status().isOk());
 
 
+    }
+
+    @Test
+    @WithMockUser(username = "admin", authorities = {"ROLE_ADMIN"})
+    @DisplayName("Can '/users/*/:DELETE' be delete user with 'ROLE_ADMIN', Expected: OK")
+    public void deleteUserWithAdmin() throws Exception {
+
+        var request = delete("/users/testuser");
+
+        mvc.perform(request).andExpect(status().isOk());
+    }
 
 
-
-
-
-
-
-
-
-
-
+    // End of DELETE request '/users' url tests
 
 }
