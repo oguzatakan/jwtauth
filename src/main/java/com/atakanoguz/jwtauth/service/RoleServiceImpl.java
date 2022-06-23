@@ -13,11 +13,10 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class RoleServiceImpl implements RoleService{
+public class RoleServiceImpl implements RoleService {
 
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
-
 
     @Override
     public List<Role> getRoles() {
@@ -31,11 +30,10 @@ public class RoleServiceImpl implements RoleService{
 
     @Override
     public void addRoleToUser(String username, String roleName) {
-
         User user = userRepository.findByUserName(username);
         Role role = roleRepository.findByName(roleName);
 
         user.getRoles().add(role);
-
     }
+
 }

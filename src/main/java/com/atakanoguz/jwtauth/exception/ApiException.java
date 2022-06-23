@@ -26,6 +26,4 @@ public class ApiException {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy - HH:mm:ss Z");
         this.timestamp = formatter.format(time);
     }
-
-
 }
